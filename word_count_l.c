@@ -50,14 +50,18 @@ word_count_t* find_word(word_count_list_t* wclist, char* word) {
   return NULL;
 }
 
+void init_word_count(word_count_t* wc, char* word){	
+	wc->word = (char *) malloc(strlen(word) * sizeof(char) + 1);
+       	strcpy(wc->word, word);
+	wc->count = 0;
+}
+
 word_count_t* add_word(word_count_list_t* wclist, char* word) {
   /* TODO */
   word_count_t* wc = find_word(wclist, word);
   if (wc == NULL){
   	wc = (word_count_t*) malloc(sizeof(word_count_t));
-	wc->word = (char *) malloc(strlen(word) * sizeof(char) + 1);
-       	strcpy(wc->word, word);
-	wc->count = 0;
+	init_word_count(wc, word);
 	list_push_back(wclist, &wc->elem);	
   }
   wc->count++;
