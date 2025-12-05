@@ -22,6 +22,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,6 +33,26 @@
 #include "word_count.h"
 #include "word_helpers.h"
 
+typedef struct {
+	char* filename;
+	word_count_list_t* word_counts;
+} thread_arg_t;
+
+void* thread_func(void* arg){
+	thread_arg_t* args = (thread_arg_t *) arg;
+	FILE *infile = fopen(args->filename, "r");
+	if (infile){
+		if (args->word_counts)
+			count_words(args->word_counts, infile);
+		else {
+			fprintf(stderr, "word_counts is NULL\n");
+			exit(1);
+		}
+	}else {
+		fprintf(stderr, "%s: %s\n", args->filename, strerror(errno));
+		exit(1);
+	}
+}
 /*
  * main - handle command line, spawning one thread per file.
  */
@@ -45,6 +66,19 @@ int main(int argc, char* argv[]) {
     count_words(&word_counts, stdin);
   } else {
     /* TODO */
+    pthread_t threads[argc - 1];
+    thread_arg_t args[argc - 1];
+    for (int i=1; i < argc; i++)
+    {
+	    args[i - 1].filename = argv[i];
+    	    args[i - 1].word_counts = &word_counts;
+	    pthread_create(&threads[i - 1], NULL, thread_func, (void *)&args[i - 1]);
+    }
+
+    for (int i=0; i < argc - 1; i++)
+    {
+    	pthread_join(threads[i], NULL);
+    }
   }
 
   /* Output final result of all threads' work. */
