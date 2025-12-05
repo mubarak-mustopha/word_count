@@ -24,33 +24,75 @@
 #error "PINTOS_LIST must be #define'd when compiling word_count_l.c"
 #endif
 
+#include <stdio.h>
+#include <string.h>
 #include "word_count.h"
 
 void init_words(word_count_list_t* wclist) { /* TODO */
+	list_init(wclist);
 }
 
 size_t len_words(word_count_list_t* wclist) {
   /* TODO */
-  return 0;
+  return list_size(wclist);
 }
 
 word_count_t* find_word(word_count_list_t* wclist, char* word) {
   /* TODO */
+  word_count_t* wc;
+  struct list_elem* e;
+  for (e = list_begin(wclist); e != list_end(wclist); e = list_next(e))
+  {
+  	wc = list_entry(e, word_count_t, elem);
+	if (strcmp(wc->word, word) == 0)
+		return wc;
+  }
   return NULL;
 }
 
 word_count_t* add_word(word_count_list_t* wclist, char* word) {
   /* TODO */
-  return NULL;
+  word_count_t* wc = find_word(wclist, word);
+  if (wc == NULL){
+  	wc = (word_count_t*) malloc(sizeof(word_count_t));
+	wc->word = (char *) malloc(strlen(word) * sizeof(char) + 1);
+       	strcpy(wc->word, word);
+	wc->count = 0;
+	list_push_back(wclist, &wc->elem);	
+  }
+  wc->count++;
+  return wc;
 }
 
 void fprint_words(word_count_list_t* wclist, FILE* outfile) {
   /* TODO */
   /* Please follow this format: fprintf(<file>, "%i\t%s\n", <count>, <word>); */
+  if (outfile == NULL)
+	  outfile = stdout;
+  word_count_t* wc;
+  struct list_elem* e;
+  for (e = list_begin(wclist); e != list_end(wclist); e = list_next(e))
+  {
+  	wc = list_entry(e, word_count_t, elem);
+	fprintf(outfile, "%i\t%s\n", wc->count, wc->word);
+  }
 }
 
 static bool less_list(const struct list_elem* ewc1, const struct list_elem* ewc2, void* aux) {
   /* TODO */
+  word_count_t* wc1 = list_entry(ewc1, word_count_t, elem);
+  word_count_t* wc2 = list_entry(ewc2, word_count_t, elem);
+  
+  /* Primary key: Sort by count */
+  if (wc1->count < wc2->count)
+  	return true;
+
+  /* Tie breaker: Sort by word alphabetically */
+  if (wc1->count == wc2->count){
+  	if(strcmp(wc1->word,wc2->word) < 0)
+		return true;
+  }
+
   return false;
 }
 
